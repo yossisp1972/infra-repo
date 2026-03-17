@@ -35,6 +35,24 @@ pipeline {
             }
         }
         
+        stage('Bootstrap CDK') {
+            steps {
+                script {
+                    docker.image('node:18-alpine').inside('-u root:root') {
+                        withCredentials([
+                            [$class: 'AmazonWebServicesCredentialsBinding', 
+                             credentialsId: 'aws-credentials']
+                        ]) {
+                            sh '''
+                                npm install -g aws-cdk
+                                cdk bootstrap
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
         stage('Deploy to AWS') {
             steps {
                 script {
