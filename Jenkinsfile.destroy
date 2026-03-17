@@ -1,0 +1,57 @@
+pipeline {
+    agent {
+        label 'Build-Slaves-L'
+    }
+    
+    environment {
+        AWS_REGION = 'us-east-1'
+    }
+    
+    stages {
+        stage('Pull Node Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        docker.image('node:18-alpine').pull()
+                    }
+                }
+            }
+        }
+        
+        stage('Confirm Destroy') {
+            steps {
+                input message: 'Are you sure you want to DESTROY all infrastructure?', 
+                      ok: 'Yes, destroy everything'
+            }
+        }
+        
+        stage('Destroy Infrastructure') {
+            steps {
+                script {
+                    docker.image('node:18-alpine').inside('-u root:root') {
+                        withCredentials([
+                            [$class: 'AmazonWebServicesCredentialsBinding', 
+                             credentialsId: 'aws-credentials']
+                        ]) {
+                            sh '''
+                                npm install -g aws-cdk
+                                npm install
+                                npm run build
+                                cdk destroy --all --force
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Infrastructure successfully destroyed!'
+        }
+        failure {
+            echo 'Failed to destroy infrastructure. Check AWS Console.'
+        }
+    }
+}
