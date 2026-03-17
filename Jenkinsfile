@@ -18,7 +18,7 @@ pipeline {
             }
         }
         
-        stage('Build & Deploy') {
+        stage('Build & Synth') {
             steps {
                 script {
                     docker.image('node:18-alpine').inside('-u root:root') {
@@ -27,15 +27,29 @@ pipeline {
                             npm --version
                             npm install -g aws-cdk
                             npm install
+                            npm run build
+                            cdk synth
                         '''
-                        
-                        if (env.BRANCH_NAME == 'main') {
-                            withCredentials([
-                                [$class: 'AmazonWebServicesCredentialsBinding', 
-                                 credentialsId: 'aws-credentials']
-                            ]) {
-                                sh 'cdk deploy --all --require-approval never'
-                            }
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to AWS') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    docker.image('node:18-alpine').inside('-u root:root') {
+                        withCredentials([
+                            [$class: 'AmazonWebServicesCredentialsBinding', 
+                             credentialsId: 'aws-credentials']
+                        ]) {
+                            sh '''
+                                npm run build
+                                cdk deploy --all --require-approval never
+                            '''
                         }
                     }
                 }
