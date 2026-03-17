@@ -44,6 +44,8 @@ pipeline {
                              credentialsId: 'aws-credentials']
                         ]) {
                             sh '''
+                                npm install -g aws-cdk
+                                npm install
                                 npm run build
                                 cdk deploy --all --require-approval never
                             '''
