@@ -1,19 +1,18 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18-alpine'
+            args '-u root:root'
+        }
+    }
     
     environment {
         AWS_REGION = 'us-east-1'
-        // AWS credentials configured in Jenkins
+        HOME = '.'
     }
     
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Install Dependencies') {
+        stage('Install CDK') {
             steps {
                 sh '''
                     node --version
@@ -30,20 +29,6 @@ pipeline {
             }
         }
         
-        stage('CDK Diff') {
-            when {
-                not { branch 'main' }
-            }
-            steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding', 
-                     credentialsId: 'aws-credentials']
-                ]) {
-                    sh 'cdk diff'
-                }
-            }
-        }
-        
         stage('CDK Deploy') {
             when {
                 branch 'main'
@@ -56,18 +41,6 @@ pipeline {
                     sh 'cdk deploy --all --require-approval never'
                 }
             }
-        }
-    }
-    
-    post {
-        success {
-            echo 'CDK deployment successful!'
-        }
-        failure {
-            echo 'CDK deployment failed!'
-        }
-        always {
-            cleanWs()
         }
     }
 }
