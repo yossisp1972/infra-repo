@@ -57,7 +57,7 @@ export class Ec2Stack extends cdk.Stack {
       ),
       machineImage: ec2.MachineImage.latestAmazonLinux2023(),
       securityGroup,
-      keyName: 'my-key-pair', // TODO: Replace with your actual key pair name in AWS
+      keyName: 'yossi', // TODO: Replace with your actual key pair name in AWS
     });
 
     // Output the instance details
