@@ -1,10 +1,11 @@
 pipeline {
-    agent {label "Build-Slaves-L"}
+    agent {
         docker {
             image 'node:18-alpine'
             args '-u root:root'
+            label 'Build-Slaves-L'  // ← Docker runs on this labeled agent
         }
-    
+    }
     
     environment {
         AWS_REGION = 'us-east-1'
