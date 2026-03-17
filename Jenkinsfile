@@ -36,9 +36,6 @@ pipeline {
         }
         
         stage('Deploy to AWS') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     docker.image('node:18-alpine').inside('-u root:root') {
