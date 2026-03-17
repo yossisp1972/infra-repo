@@ -26,8 +26,7 @@ pipeline {
                             node --version
                             npm --version
                             npm install -g aws-cdk
-                            npm ci
-                            cdk synth
+                            npm install
                         '''
                         
                         if (env.BRANCH_NAME == 'main') {
