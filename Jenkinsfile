@@ -1,9 +1,11 @@
 pipeline {
     agent {
         docker {
-            image 'node:18-alpine'
+            image 'docker.io/node:18-alpine'  // ← Explicit Docker Hub path
             args '-u root:root'
-            label 'Build-Slaves-L'  // ← Docker runs on this labeled agent
+            label 'Build-Slaves-L'
+            registryUrl ''  // ← Use public Docker Hub, not Artifactory
+            registryCredentialsId ''  // ← No credentials needed
         }
     }
     
