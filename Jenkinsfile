@@ -10,11 +10,15 @@ pipeline {
     stages {
         stage('Pull Node Image') {
             steps {
-                sh 'docker pull docker.io/library/node:18-alpine'
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        docker.image('node:18-alpine').pull()
+                    }
+                }
             }
         }
         
-        stage('Install CDK & Deploy') {
+        stage('Build & Deploy') {
             steps {
                 script {
                     docker.image('node:18-alpine').inside('-u root:root') {
