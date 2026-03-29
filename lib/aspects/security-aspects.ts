@@ -21,7 +21,7 @@ export class EncryptionAspect implements cdk.IAspect {
     
     // Enforce EBS encryption
     if (node instanceof ec2.CfnInstance) {
-      const blockDevices = node.blockDeviceMappings || [];
+      const blockDevices = Array.isArray(node.blockDeviceMappings) ? node.blockDeviceMappings : [];
       blockDevices.forEach((device: any, index: number) => {
         if (device.ebs && !device.ebs.encrypted) {
           cdk.Annotations.of(node).addError(
@@ -63,7 +63,7 @@ export class TaggingAspect implements cdk.IAspect {
   
   visit(node: IConstruct): void {
     if (node instanceof cdk.Stack) {
-      const tags = cdk.Tags.of(node).renderedTags;
+      const tags = (node as cdk.Stack).tags.tagValues();
       
       this.requiredTags.forEach(tagKey => {
         if (!tags[tagKey]) {
@@ -118,7 +118,7 @@ export class SecurityGroupAspect implements cdk.IAspect {
       const sg = node as ec2.CfnSecurityGroup;
       
       // Warn if all outbound traffic is allowed
-      const hasUnrestrictedEgress = sg.securityGroupEgress?.some(
+      const hasUnrestrictedEgress = Array.isArray(sg.securityGroupEgress) && sg.securityGroupEgress.some(
         (rule: any) => rule.cidrIp === '0.0.0.0/0' && rule.ipProtocol === '-1'
       );
       
@@ -138,9 +138,9 @@ export class ImdsAspect implements cdk.IAspect {
   visit(node: IConstruct): void {
     if (node instanceof ec2.CfnInstance) {
       const instance = node as ec2.CfnInstance;
+      const metaOpts = instance.metadataOptions as any;
       
-      if (!instance.metadataOptions || 
-          instance.metadataOptions.httpTokens !== 'required') {
+      if (!metaOpts || metaOpts.httpTokens !== 'required') {
         cdk.Annotations.of(node).addError(
           'EC2 instances must enforce IMDSv2 (set HttpTokens to required)'
         );
@@ -149,9 +149,9 @@ export class ImdsAspect implements cdk.IAspect {
     
     if (node instanceof ec2.CfnLaunchTemplate) {
       const template = node as ec2.CfnLaunchTemplate;
+      const ltData = template.launchTemplateData as any;
       
-      if (!template.launchTemplateData?.metadataOptions ||
-          template.launchTemplateData.metadataOptions.httpTokens !== 'required') {
+      if (!ltData?.metadataOptions || ltData.metadataOptions.httpTokens !== 'required') {
         cdk.Annotations.of(node).addError(
           'Launch templates must enforce IMDSv2 (set HttpTokens to required)'
         );
@@ -174,7 +174,7 @@ export class PublicAccessAspect implements cdk.IAspect {
           'S3 buckets must have public access block configuration'
         );
       } else {
-        const config = bucket.publicAccessBlockConfiguration;
+        const config = bucket.publicAccessBlockConfiguration as any;
         if (!config.blockPublicAcls || 
             !config.blockPublicPolicy || 
             !config.ignorePublicAcls || 
@@ -246,7 +246,7 @@ export class IamAspect implements cdk.IAspect {
 export class DeletionProtectionAspect implements cdk.IAspect {
   visit(node: IConstruct): void {
     const stack = cdk.Stack.of(node);
-    const environment = cdk.Tags.of(stack).renderedTags['Environment'];
+    const environment = stack.tags.tagValues()['Environment'];
     
     if (environment === 'production') {
       // Enable stack termination protection

@@ -1,4 +1,4 @@
-import { EC2Client, DescribeInstancesCommand, DescribeVpcsCommand } from '@aws-sdk/client-ec2';
+import { EC2Client, DescribeInstancesCommand, DescribeVpcsCommand, DescribeSecurityGroupsCommand } from '@aws-sdk/client-ec2';
 
 describe('Ec2Stack Integration Tests', () => {
   let ec2Client: EC2Client;
@@ -73,8 +73,8 @@ describe('Ec2Stack Integration Tests', () => {
     );
     
     const ingressRules = sgResponse.SecurityGroups[0].IpPermissions;
-    const hasHTTP = ingressRules.some(r => r.FromPort === 80 && r.ToPort === 80);
-    const hasSSH = ingressRules.some(r => r.FromPort === 22 && r.ToPort === 22);
+    const hasHTTP = ingressRules.some((r: any) => r.FromPort === 80 && r.ToPort === 80);
+    const hasSSH = ingressRules.some((r: any) => r.FromPort === 22 && r.ToPort === 22);
     
     expect(hasHTTP).toBe(true);
     expect(hasSSH).toBe(true);
