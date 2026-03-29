@@ -18,7 +18,7 @@ describe('Ec2Stack Integration Tests', () => {
     );
     
     expect(response.Vpcs).toHaveLength(1);
-    expect(response.Vpcs[0].CidrBlock).toBe('10.0.0.0/16');
+    expect(response.Vpcs![0].CidrBlock).toBe('10.0.0.0/16');
   }, 30000);
   
   test('EC2 instance is running', async () => {
@@ -32,11 +32,11 @@ describe('Ec2Stack Integration Tests', () => {
     );
     
     expect(response.Reservations).toHaveLength(1);
-    expect(response.Reservations[0].Instances).toHaveLength(1);
+    expect(response.Reservations![0].Instances).toHaveLength(1);
     
-    const instance = response.Reservations[0].Instances[0];
+    const instance = response.Reservations![0].Instances![0];
     expect(instance.InstanceType).toBe('t3.micro');
-    expect(instance.State.Name).toBe('running');
+    expect(instance.State!.Name).toBe('running');
   }, 30000);
   
   test('Instance has public IP', async () => {
@@ -48,7 +48,7 @@ describe('Ec2Stack Integration Tests', () => {
       })
     );
     
-    const instance = response.Reservations[0].Instances[0];
+    const instance = response.Reservations![0].Instances![0];
     expect(instance.PublicIpAddress).toBeDefined();
     expect(instance.PublicIpAddress).toMatch(/^\d+\.\d+\.\d+\.\d+$/);
   }, 30000);
@@ -62,8 +62,8 @@ describe('Ec2Stack Integration Tests', () => {
       })
     );
     
-    const instance = response.Reservations[0].Instances[0];
-    const sgId = instance.SecurityGroups[0].GroupId;
+    const instance = response.Reservations![0].Instances![0];
+    const sgId = instance.SecurityGroups![0].GroupId!;
     
     // Check security group rules
     const sgResponse = await ec2Client.send(
@@ -72,7 +72,7 @@ describe('Ec2Stack Integration Tests', () => {
       })
     );
     
-    const ingressRules = sgResponse.SecurityGroups[0].IpPermissions;
+    const ingressRules = sgResponse.SecurityGroups![0].IpPermissions ?? [];
     const hasHTTP = ingressRules.some((r: any) => r.FromPort === 80 && r.ToPort === 80);
     const hasSSH = ingressRules.some((r: any) => r.FromPort === 22 && r.ToPort === 22);
     
